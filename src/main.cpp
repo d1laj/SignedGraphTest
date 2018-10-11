@@ -26,7 +26,7 @@ public:
 };
 } // namespace Color
 
-int n= 9;
+int n= 7;
 #define NB_FRAG 500000
 bool stop = false;
 std::mutex talk;
@@ -86,8 +86,6 @@ void th_test(unsigned long long total, int id){
       }
     }
   }
-
-
 }
 
 int nb_threads = 8;
@@ -109,8 +107,8 @@ void test(unsigned long long total, int start, int end){
 int start = 0;
 int end = NB_FRAG;
 
-int main(int argc, char **argv) {
-  std::cout << "Hello world\n";
+int test_graphs(int argc, char** argv){
+	std::cout << "Hello world\n";
 	if (argc == 2){
 		nb_threads = atoi(argv[1]);
 	} else if (argc == 4){
@@ -141,28 +139,34 @@ int main(int argc, char **argv) {
 	total = 2622183133; // Hardcoded
 	
   std::cout << total << "\n";
-  /*
-  G = BipGraph(n);
-  while (!G.end) {
-    if (G.verifyPropertyGadget()) {
-      std::cout << green <<  G << "\n" << def;
-      std::cout << count << "\n";
-      //std::cout << G << def;
-      //std::cout << val1 << " != " << val2;
-      //std::cout << "\n############\n";
-      //std::cout << def;
-      break;
-    }
-    //std::cout << def;
-    if (count % (1<<10) == 0){
-      std::cout << (double)count/(double)total << "\r" <<std::flush;
-    }
-    // std::cout << G << def;
-    count++;
-    ++G;
-    // std::cout << G << "here\n";
-  }
-  std::cout << count << '\n'<<  def;
-  */
   test(total, start, end);
+}
+
+int autre_test(){
+	BipGraph G(n);
+  int count = 0;
+  const Color::Modifier red(Color::FG_RED);
+  const Color::Modifier green(Color::FG_GREEN);
+  const Color::Modifier def(Color::FG_DEFAULT);
+
+  unsigned long long total=0;
+  std::cout << "Calcul total\n";
+  while (!G.end){
+    total++;
+    ++G;
+		if (G.is_planar()){
+			std::cout << total << '\r' << std::flush;
+			if (G.tentative_poly_test() != G.sign_to_UC4()){
+				std::cout << "found" << '\n' <<  G << std::endl;
+			}
+		}
+		//std::cout << G << '\n';
+    //if (total % (2<<14) == 0) std::cout << total << '\r' << std::flush;
+		if (total % (2<<18) == 0) std::cout << G << '\n' << std::flush;
+  }
+}
+
+int main(int argc, char **argv) {
+  //test_graphs(argc, argv);
+	autre_test();	
 }

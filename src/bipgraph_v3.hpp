@@ -444,25 +444,25 @@ struct BipGraph {
   bool is_end() const { return end; }
 
   bool has_double_uc4(BipGraph &G, DoubleUC4 &U) {
-    for (int i = 0; i < n * n; i++) {
-      for (int j = 0; j < n * n; j++) {
+    for (uchar i = 0; i < n * n; i++) {
+      for (uchar j = 0; j < n * n; j++) {
         if (i / n == j / n || j % n == i % n) {
           continue;
         }
-        int k = n * (i / n) + (j % n);
-        int l = n * (j / n) + (i % n);
+        uchar k = n * (i / n) + (j % n);
+        uchar l = n * (j / n) + (i % n);
         if ((G.matrix[i] == G.matrix[j]) != (G.matrix[k] == G.matrix[l]) &&
             0 != G.matrix[i] && 0 != G.matrix[j] && 0 != G.matrix[k] &&
             0 != G.matrix[l]) { // UC4
-          for (int p = 0; p < n * n; p++) {
+          for (uchar p = 0; p < n * n; p++) {
             if (i / n == p / n || p % n == i % n) {
               continue;
             }
             if (j == p) {
               continue;
             }
-            int q = n * (i / n) + (p % n);
-            int r = n * (p / n) + (i % n);
+            uchar q = n * (i / n) + (p % n);
+            uchar r = n * (p / n) + (i % n);
             if ((G.matrix[i] == G.matrix[p]) != (G.matrix[q] == G.matrix[r]) &&
                 0 != G.matrix[p] && 0 != G.matrix[q] &&
                 0 != G.matrix[r]) { // UC4
@@ -477,15 +477,15 @@ struct BipGraph {
   }
 
   bool uc4_fold(BipGraph &G, BipGraph &G2, DoubleUC4 UC4) {
-    int col1 = UC4.a % n;
-    int col2 = UC4.b % n;
-    int ligne1 = UC4.a / n;
-    int ligne2 = UC4.b / n;
+    uchar col1 = UC4.a % n;
+    uchar col2 = UC4.b % n;
+    uchar ligne1 = UC4.a / n;
+    uchar ligne2 = UC4.b / n;
     // std::cout << col1 << " " << col2 << " " << ligne1 << " " << ligne2 << " "
     //          << UC4.a << " " << UC4.b << std::endl;
     bool eq1 = true;
     bool op1 = true;
-    for (int i = 0; i < n; i++) {
+    for (uchar i = 0; i < n; i++) {
       if (G.matrix.at(i, col1) > 0 && G.matrix.at(i, col2) > 0) {
         if (G.matrix.at(i, col1) == G.matrix.at(i, col2)) {
           op1 = false;
@@ -500,7 +500,7 @@ struct BipGraph {
 
     bool eq2 = true;
     bool op2 = true;
-    for (int i = 0; i < n; i++) {
+    for (uchar i = 0; i < n; i++) {
       if (G.matrix.at(ligne1, i) > 0 && 0 < G.matrix.at(ligne2, i)) {
         if (G.matrix.at(ligne1, i) == G.matrix.at(ligne2, i)) {
           op2 = false;
@@ -513,12 +513,12 @@ struct BipGraph {
       return false;
     }
 
-    int current_col = 0;
-    int current_line = 0;
-    for (int i = 0; i < n; i++) {
+    uchar current_col = 0;
+    uchar current_line = 0;
+    for (uchar i = 0; i < n; i++) {
       current_line = 0;
       if (i == col2) {
-        for (int j = 0; j < n; j++) {
+        for (uchar j = 0; j < n; j++) {
           if (j == ligne2) {
             G2.matrix.at(current_line, current_col) =
                 (eq1 == eq2 ? G.matrix.at(j, i)
@@ -560,7 +560,7 @@ struct BipGraph {
       } else if (i == col1) {
         continue;
       } else {
-        for (int j = 0; j < n; j++) {
+        for (uchar j = 0; j < n; j++) {
           if (j == ligne2) {
             G2.matrix.at(current_line, current_col) =
                 (eq2 ? G.matrix.at(j, i)
@@ -611,10 +611,10 @@ struct BipGraph {
 std::ostream &operator<<(std::ostream &os, BipGraph &G) {
   for (int i = 0; i < G.n; i++) {
     for (int j = 0; j < G.n; j++) {
-      os << G.matrix.at_val(i, j) << " ";
+      os << (int)G.matrix.at_val(i, j) << " ";
     }
-    os << " | " << G.matrix.degLine[i] << " | " << G.matrix.strongLine[i]
-       << " | " << G.matrix.compLine[i];
+    os << " | " << (int)G.matrix.degLine[i] << " | " << (int)G.matrix.strongLine[i]
+       << " | " << (int)G.matrix.compLine[i];
     os << "\n";
   }
   for (int j = 0; j < G.n; j++) {
@@ -623,7 +623,7 @@ std::ostream &operator<<(std::ostream &os, BipGraph &G) {
   }
   os << "\n";
   for (int j = 0; j < G.n; j++) {
-    os << G.matrix.degCol[j] << " ";
+    os << (int)G.matrix.degCol[j] << " ";
   }
   os << '\n';
   for (int j = 0; j < G.n; j++) {
@@ -632,7 +632,7 @@ std::ostream &operator<<(std::ostream &os, BipGraph &G) {
   }
   os << "\n";
   for (int j = 0; j < G.n; j++) {
-    os << G.matrix.strongCol[j] << " ";
+    os << (int)G.matrix.strongCol[j] << " ";
   }
   os << '\n';
   for (int j = 0; j < G.n; j++) {
@@ -641,7 +641,7 @@ std::ostream &operator<<(std::ostream &os, BipGraph &G) {
   }
   os << "\n";
   for (int j = 0; j < G.n; j++) {
-    os << G.matrix.compCol[j] << " ";
+    os << (int)G.matrix.compCol[j] << " ";
   }
   os << '\n';
   return os;
