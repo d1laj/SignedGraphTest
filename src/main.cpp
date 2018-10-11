@@ -60,7 +60,7 @@ void th_test(unsigned long long total, int id){
     }
     while (count <= end && !stop){
       if ( /*G.as_at_least_4_deg_2() &&*/ G.is_planar() && G.verifyPropertyGadget() ) {
-        stop = true;
+        //stop = true;
         md.lock();
         ms << done << "\n" << G << "\n";
         md.unlock();
