@@ -377,6 +377,7 @@ struct BipGraph {
               }
               matrix.reset_switch();
               if (good && found){
+std::cout << "Very good" << v1 << " " << v2 << " " << v3 << " " << v4 << std::endl;
                 return true;
               }
             }
