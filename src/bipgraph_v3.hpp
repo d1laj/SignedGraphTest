@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iostream>
+#include "stream.hpp"
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/boyer_myrvold_planar_test.hpp>
@@ -325,7 +325,7 @@ struct BipGraph {
   bool sign_to_UC4() {
     while (!matrix.next_switch()) {
       if (tec_to_UC4()) {
-        // std::cout << *this;
+        // ms << *this;
         matrix.reset_switch();
         return true;
       }
@@ -351,13 +351,13 @@ struct BipGraph {
               if (matrix.degCol[v4] != 2){
                 continue;
               }
-              //std::cout << "Selected:" << v1 << " " << v2 << " " << v3 << " " << v4 << "\n";
+              //ms << "Selected:" << v1 << " " << v2 << " " << v3 << " " << v4 << "\n";
               bool found = true;
               bool good = false;
               while (!matrix.next_switch(v1,v2,v3,v4) && found) {
                 if (tec_to_UC4()) {
                   good = true;
-                  // std::cout << *this;
+                  // ms << *this;
                   BipGraph B(n);
                   id(B,v1,v2,v3,v4);
                   if (!B.tec_to_UC4()){
@@ -377,7 +377,7 @@ struct BipGraph {
               }
               matrix.reset_switch();
               if (good && found){
-std::cout << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <<(int) v4 << std::endl;
+ms << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <<(int) v4 << '\n';
                 return true;
               }
             }
@@ -482,8 +482,8 @@ std::cout << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <
     uchar col2 = UC4.b % n;
     uchar ligne1 = UC4.a / n;
     uchar ligne2 = UC4.b / n;
-    // std::cout << col1 << " " << col2 << " " << ligne1 << " " << ligne2 << " "
-    //          << UC4.a << " " << UC4.b << std::endl;
+    // ms << col1 << " " << col2 << " " << ligne1 << " " << ligne2 << " "
+    //          << UC4.a << " " << UC4.b << '\n';
     bool eq1 = true;
     bool op1 = true;
     for (uchar i = 0; i < n; i++) {
@@ -582,23 +582,23 @@ std::cout << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <
       }
       current_col++;
     }
-    // std::cout << G2 << "\n";
-    // std::cout << "bah" << std::endl;
+    // ms << G2 << "\n";
+    // ms << "bah" << '\n';
 
-    // std::cout << eq1 << op1 << eq2 << op2 << "\n";
+    // ms << eq1 << op1 << eq2 << op2 << "\n";
     return true;
   }
 
   bool tentative_poly_test_helper(BipGraph G) {
-    // std::cout << "booo" << std::endl;
+    // ms << "booo" << '\n';
     DoubleUC4 UC4(n * n, n * n);
     BipGraph G2(n);
     // G2.matrix.mat = std::vector<int>(n * n, -1);
     if (has_double_uc4(G, UC4)) {
-      // std::cout << "booo" << std::endl;
+      // ms << "booo" << '\n';
       if (uc4_fold(G, G2, UC4)) {
-        // std::cout << "booo2" << std::endl;
-        // std::cout << G2 << "\n";
+        // ms << "booo2" << '\n';
+        // ms << G2 << "\n";
         return tentative_poly_test_helper(G2);
       } else {
         return false;

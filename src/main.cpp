@@ -49,7 +49,7 @@ void th_test(unsigned long long total, int id){
     fragments.pop();
     m.unlock();
     talk.lock();
-    std::cout << "Thread " << id << " do frag " << ind << "\n";
+    ms << "Thread " << id << " do frag " << ind << "\n";
     talk.unlock();
 
     unsigned long long begin = total * ind / NB_FRAG;
@@ -62,7 +62,7 @@ void th_test(unsigned long long total, int id){
       if ( /*G.as_at_least_4_deg_2() &&*/ G.is_planar() && G.verifyPropertyGadget() ) {
         stop = true;
         md.lock();
-        std::cout << done << "\n" << G << "\n";
+        ms << done << "\n" << G << "\n";
         md.unlock();
       }
       ++G;
@@ -80,7 +80,7 @@ void th_test(unsigned long long total, int id){
         done += mydone;
         mydone = 0;
         talk.lock();
-        std::cout << "                              Done: " << done << " Percent: " << (double)done/(double)total<< "\r" << std::flush;
+        ms << "                              Done: " << done << " Percent: " << (double)done/(double)total<< "\r" << myflush();
         talk.unlock();
         md.unlock();
       }
@@ -108,7 +108,7 @@ int start = 0;
 int end = NB_FRAG;
 
 int test_graphs(int argc, char** argv){
-	std::cout << "Hello world\n";
+	ms << "Hello world\n";
 	if (argc == 2){
 		nb_threads = atoi(argv[1]);
 	} else if (argc == 4){
@@ -116,8 +116,8 @@ int test_graphs(int argc, char** argv){
 		start = atoi(argv[2]);
 		end = atoi(argv[3]);
 	} else{
-		std::cout << "Usage: <program name> nb_thread \nUsage Usage: <program name> nb_thread start end\n";
-		std::cout << "Note start>=0 and end<= 500000\n";
+		ms << "Usage: <program name> nb_thread \nUsage Usage: <program name> nb_thread start end\n";
+		ms << "Note start>=0 and end<= 500000\n";
 		return 0;
 	}
 
@@ -128,17 +128,17 @@ int test_graphs(int argc, char** argv){
   const Color::Modifier def(Color::FG_DEFAULT);
 
   unsigned long long total=0;
-  std::cout << "Calcul total\n";
+  ms << "Calcul total\n";
   while (false && !G.end){
     total++;
     ++G;
-		//std::cout << G << '\n';
-    if (total % (2<<14) == 0) std::cout << total << '\r' << std::flush;
-//		if (total % (2<<18) == 0) std::cout << G << '\n' << std::flush;
+		//ms << G << '\n';
+    if (total % (2<<14) == 0) ms << total << '\r' << myflush();
+//		if (total % (2<<18) == 0) ms << G << '\n' << myflush();
   }
 	total = 2622183133; // Hardcoded
 	
-  std::cout << total << "\n";
+  ms << total << "\n";
   test(total, start, end);
 }
 
@@ -150,19 +150,19 @@ int autre_test(){
   const Color::Modifier def(Color::FG_DEFAULT);
 
   unsigned long long total=0;
-  std::cout << "Calcul total\n";
+  ms << "Calcul total\n";
   while (!G.end){
     total++;
     ++G;
 		if (G.is_planar()){
-			std::cout << total << '\r' << std::flush;
+			ms << total << '\r' << myflush();
 			if (G.tentative_poly_test() != G.sign_to_UC4()){
-				std::cout << "found" << '\n' <<  G << std::endl;
+				ms << "found" << '\n' <<  G << '\n' << myflush();
 			}
 		}
-		//std::cout << G << '\n';
-    //if (total % (2<<14) == 0) std::cout << total << '\r' << std::flush;
-		if (total % (2<<18) == 0) std::cout << G << '\n' << std::flush;
+		//ms << G << '\n';
+    //if (total % (2<<14) == 0) ms << total << '\r' << myflush();
+		if (total % (2<<18) == 0) ms << G << '\n' << myflush();
   }
 }
 
