@@ -26,7 +26,7 @@ public:
 };
 } // namespace Color
 
-int n= 7;
+int n= 9;
 #define NB_FRAG 500000
 bool stop = false;
 std::mutex talk;
@@ -167,6 +167,6 @@ int autre_test(){
 }
 
 int main(int argc, char **argv) {
-  //test_graphs(argc, argv);
-	autre_test();	
+ test_graphs(argc, argv);
+//	autre_test();	
 }
