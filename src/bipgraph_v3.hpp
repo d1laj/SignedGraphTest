@@ -274,9 +274,55 @@ struct BipGraph {
 
 	bool is_planar(){
 		BoostGraph g(2*n);
-		matrix.populate_boost_graph(g);
-	  return boyer_myrvold_planarity_test(g);
+    matrix.populate_boost_graph(g);
+    return is_planar(g);
 	}
+
+  inline bool is_planar(BoostGraph& g){
+	  return boyer_myrvold_planarity_test(g);
+  }
+
+  bool can_be_planar_with_2_vertex_on_outer_face(BoostGraph& g, int c1, int c2){
+    add_edge(c1,c2,g);
+    bool result =  is_planar(g);
+    remove_edge(c1,c2,g);
+    return result;
+  }
+
+  bool can_be_planar_with_3_vertex_on_outer_face(BoostGraph& g, int c1, int c2, int c3){
+    add_edge(c1,c2,g);
+    add_edge(c3,c2,g);
+    add_edge(c1,c3,g);
+    bool result =  is_planar(g);
+    remove_edge(c1,c2,g);
+    remove_edge(c3,c2,g);
+    remove_edge(c1,c3,g);
+    return result;
+  }
+
+  bool can_be_planar_with_4_vertex_on_outer_face(BoostGraph& g, int c1, int c2, int c3, int c4){
+    bool result = false;
+    add_edge(c1,c2,g);
+    add_edge(c2,c3,g);
+    add_edge(c3,c4,g);
+    add_edge(c4,c1,g);
+    result = result || is_planar(g);
+    remove_edge(c1,c2,g);
+    remove_edge(c3,c4,g);
+    add_edge(c1,c3,g);
+    add_edge(c2,c4,g);
+    result = result || is_planar(g);
+    remove_edge(c2,c3,g);
+    remove_edge(c1,c4,g);
+    add_edge(c1,c2,g);
+    add_edge(c3,c4,g);
+    result = result || is_planar(g);
+    remove_edge(c1,c2,g);
+    remove_edge(c3,c4,g);
+    remove_edge(c1,c3,g);
+    remove_edge(c2,c4,g);
+    return result;
+  }
 
 	bool as_at_least_4_deg_2(){
 		return matrix.as_at_least_4_deg_2();
@@ -334,57 +380,78 @@ struct BipGraph {
     return false;
   }
 
+  std::vector<uchar> get_deg_2_vert(){
+    std::vector<uchar> tmp;
+    for (uchar v=0; v <n;v++){
+      if (matrix.degCol[v] == 2){
+        tmp.push_back(v);
+      }
+    }
+    return tmp;
+  }
+
   bool verifyPropertyGadget(){
-      for (uchar v1=0; v1 <n; v1++){
-        if (matrix.degCol[v1] != 2){
-          continue;
-        }
-        for (uchar v2=v1+1; v2 <n; v2++){
-          if (matrix.degCol[v2] != 2){
+      BoostGraph g(2*n);
+      matrix.populate_boost_graph(g);
+      if (!is_planar(g)){
+        return false;
+      }
+      std::vector<uchar> degre2vert = get_deg_2_vert();
+      auto sizemax = degre2vert.size();
+      if (sizemax < 4){
+        return false;
+      }
+      for (uchar v1=0; v1 < sizemax; v1++){
+        for (uchar v2=v1+1; v2 < sizemax; v2++){
+          if (!can_be_planar_with_2_vertex_on_outer_face(g,v1,v2)){
             continue;
           }
-          for (uchar v3=v2+1; v3 <n; v3++){
-            if (matrix.degCol[v3] != 2){
+          for (uchar v3=v2+1; v3 < sizemax; v3++){
+            if (!can_be_planar_with_3_vertex_on_outer_face(g,v1,v2,v3)){
               continue;
             }
-            for (uchar v4=v3+1; v4 <n; v4++){
-              if (matrix.degCol[v4] != 2){
+            for (uchar v4=v3+1; v4 < sizemax; v4++){
+              if (!can_be_planar_with_4_vertex_on_outer_face(g,v1,v2,v3,v4)){
                 continue;
               }
               //ms << "Selected:" << v1 << " " << v2 << " " << v3 << " " << v4 << "\n";
-              bool found = true;
-              bool good = false;
-              while (!matrix.next_switch(v1,v2,v3,v4) && found) {
-                if (tec_to_UC4()) {
-                  good = true;
-                  // ms << *this;
-                  BipGraph B(n);
-                  id(B,v1,v2,v3,v4);
-                  if (!B.tec_to_UC4()){
-                    found = false;
-                    continue;
-                  }
-                  if (weard_function(v1,v2) || weard_function(v2,v1)
-                     || weard_function(v1,v3) || weard_function(v3,v1)
-                     || weard_function(v1,v4) || weard_function(v4,v1)
-                     || weard_function(v2,v3) || weard_function(v3,v2)
-                     || weard_function(v2,v4) || weard_function(v4,v2)
-                     || weard_function(v3,v4) || weard_function(v4,v3)
-                   ){
-                     found = false;
-                   }
-                }
-              }
-              matrix.reset_switch();
-              if (good && found){
-ms << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <<(int) v4 << '\n';
-                return true;
-              }
+              verifyPropertyGadgetHelper1(v1,v2,v3,v4);
             }
           }
         }
       }
       return false;
+  }
+
+  bool verifyPropertyGadgetHelper1(int v1, int v2, int v3, int v4){
+    bool found = true;
+    bool good = false;
+    while (!matrix.next_switch(v1,v2,v3,v4) && found) {
+      if (tec_to_UC4()) {
+        good = true;
+        // ms << *this;
+        BipGraph B(n);
+        id(B,v1,v2,v3,v4);
+        if (!B.tec_to_UC4()){
+          found = false;
+          continue;
+        }
+        if (weard_function(v1,v2) || weard_function(v2,v1)
+           || weard_function(v1,v3) || weard_function(v3,v1)
+           || weard_function(v1,v4) || weard_function(v4,v1)
+           || weard_function(v2,v3) || weard_function(v3,v2)
+           || weard_function(v2,v4) || weard_function(v4,v2)
+           || weard_function(v3,v4) || weard_function(v4,v3)
+         ){
+           found = false;
+         }
+      }
+    }
+    matrix.reset_switch();
+    if (good && found){
+      ms << "Very good" <<(int) v1 << " " << (int)v2 << " " << (int)v3 << " " <<(int) v4 << '\n';
+      return true;
+    }
   }
 
   bool weard_function(uchar c1,uchar c2) const {
