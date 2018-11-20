@@ -45,7 +45,7 @@ CFLAGS := -std=c11
 # C++ flags
 CXXFLAGS := -std=c++1z -pthread
 # C/C++ flags
-CPPFLAGS := -g -Wall -Wextra -pedantic -I src -pthread -O2
+CPPFLAGS := -Wall -Wextra -pedantic -I src -pthread -O3
 # linker flags
 LDFLAGS := -pthread
 # flags required for dependency generation; passed to compilers

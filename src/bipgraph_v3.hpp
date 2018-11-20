@@ -1,11 +1,12 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
+#include "stream.hpp"
 #include <algorithm>
+#include <bitset>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/boyer_myrvold_planar_test.hpp>
 #include <fstream>
-#include <iostream>
 #include <vector>
 
 // Warning code dégueux extrait d'une api écrit en 50 av JC.
@@ -20,6 +21,7 @@ using BoostGraph =
 // Âmes sensibles s'abstenir
 
 #define DEGMAX 3
+#define N 7
 using uchar = unsigned char;
 
 struct DoubleUC4 {
@@ -30,26 +32,28 @@ struct DoubleUC4 {
 
 struct Matrix {
   uchar size;
-  std::vector<uchar> mat;
-  std::vector<uchar> degCol;
-  std::vector<uchar> degLine;
-  std::vector<uchar> strongCol;
-  std::vector<uchar> strongLine;
-  std::vector<uchar> compCol;
-  std::vector<uchar> compLine;
-  std::vector<bool> switchCol;
-  std::vector<bool> switchLine;
+  std::array<uchar, N * N> mat;
+  std::array<uchar, N> degCol;
+  std::array<uchar, N> degLine;
+  std::array<uchar, N> strongCol;
+  std::array<uchar, N> strongLine;
+  std::array<uchar, N> compCol;
+  std::array<uchar, N> compLine;
+  std::bitset<N> switchCol;
+  std::bitset<N> switchLine;
   uchar nb_col_leq_2;
 
   Matrix(const uchar n)
-      : size(n), mat(std::vector<uchar>(n * n, 0)),
-        degCol(std::vector<uchar>(n, 0)), degLine(std::vector<uchar>(n, 0)),
-        strongCol(std::vector<uchar>(n, n * n)),
-        strongLine(std::vector<uchar>(n, n * n)),
-        compCol(std::vector<uchar>(n, n * n)),
-        compLine(std::vector<uchar>(n, n * n)),
-        switchCol(std::vector<bool>(n, false)),
-        switchLine(std::vector<bool>(n, false)), nb_col_leq_2(size) {}
+      : size(n), mat(), degCol(), degLine(), strongCol(), strongLine(),
+        compCol(), compLine(), switchCol(), switchLine(), nb_col_leq_2(size) {
+    mat.fill(0);
+    degCol.fill(0);
+    degLine.fill(0);
+    strongCol.fill(n * n);
+    strongLine.fill(n * n);
+    compCol.fill(n * n);
+    compLine.fill(n * n);
+  }
 
   uchar &at(const uchar a, const uchar b) { return mat[a * size + b]; }
   uchar at(const uchar a, const uchar b) const { return mat[a * size + b]; }
@@ -274,7 +278,27 @@ struct BipGraph {
   bool is_planar() {
     BoostGraph g(2 * n);
     matrix.populate_boost_graph(g);
+    return is_planar(g);
+  }
+
+  inline bool is_planar(BoostGraph &g) {
     return boyer_myrvold_planarity_test(g);
+  }
+
+  bool can_be_planar_with_4_vertex_on_outer_face(BoostGraph &g, int c1, int c2,
+                                                 int c3, int c4) {
+    bool result = false;
+    int x = n * n;
+    add_edge(c1, x, g);
+    add_edge(c2, x, g);
+    add_edge(c3, x, g);
+    add_edge(c4, x, g);
+    result = is_planar(g);
+    remove_edge(c1, x, g);
+    remove_edge(c2, x, g);
+    remove_edge(c3, x, g);
+    remove_edge(c4, x, g);
+    return result;
   }
 
   bool as_at_least_4_deg_2() { return matrix.as_at_least_4_deg_2(); }
@@ -287,7 +311,6 @@ struct BipGraph {
     }
     return false;
   }
-
   void next(const int i) {
     // Si on atteint un indice négatif, on a dépacé le bit de poinds le plus
     // fort
@@ -332,7 +355,7 @@ struct BipGraph {
   bool sign_to_UC4() {
     while (!matrix.next_switch()) {
       if (tec_to_UC4()) {
-        // std::cout << *this;
+        // ms << *this;
         matrix.reset_switch();
         return true;
       }
@@ -341,56 +364,90 @@ struct BipGraph {
     return false;
   }
 
-  bool verifyPropertyGadget() {
-    for (uchar v1 = 0; v1 < n; v1++) {
-      if (matrix.degCol[v1] != 2) {
-        continue;
+  std::vector<uchar> get_deg_2_vert() {
+    std::vector<uchar> tmp;
+    for (uchar v = 0; v < n; v++) {
+      if (matrix.degCol[v] == 2) {
+        tmp.push_back(v);
       }
-      for (uchar v2 = v1 + 1; v2 < n; v2++) {
-        if (matrix.degCol[v2] != 2) {
-          continue;
-        }
-        for (uchar v3 = v2 + 1; v3 < n; v3++) {
-          if (matrix.degCol[v3] != 2) {
-            continue;
-          }
-          for (uchar v4 = v3 + 1; v4 < n; v4++) {
-            if (matrix.degCol[v4] != 2) {
+    }
+    return tmp;
+  }
+
+  bool verifyPropertyGadget(const bool planarity) {
+    BoostGraph g(2 * n);
+    matrix.populate_boost_graph(g);
+    if (planarity && !is_planar(g)) {
+      return false;
+    }
+    std::vector<uchar> degre2vert = get_deg_2_vert();
+    auto sizemax = degre2vert.size();
+    if (sizemax < 4) {
+      return false;
+    }
+    for (uchar v1 = 0; v1 < sizemax; v1++) {
+      for (uchar v2 = v1 + 1; v2 < sizemax; v2++) {
+        for (uchar v3 = v2 + 1; v3 < sizemax; v3++) {
+          for (uchar v4 = v3 + 1; v4 < sizemax; v4++) {
+            if (planarity && !can_be_planar_with_4_vertex_on_outer_face(
+                                 g, degre2vert[v1], degre2vert[v2],
+                                 degre2vert[v3], degre2vert[v4])) {
               continue;
             }
-            // std::cout << "Selected:" << v1 << " " << v2 << " " << v3 << " "
-            // << v4 << "\n";
-            bool found = true;
-            bool good = false;
-            while (!matrix.next_switch(v1, v2, v3, v4) && found) {
-              if (tec_to_UC4()) {
-                good = true;
-                // std::cout << *this;
-                BipGraph B(n);
-                id(B, v1, v2, v3, v4);
-                if (!B.tec_to_UC4()) {
-                  found = false;
-                  continue;
-                }
-                if (weard_function(v1, v2) || weard_function(v2, v1) ||
-                    weard_function(v1, v3) || weard_function(v3, v1) ||
-                    weard_function(v1, v4) || weard_function(v4, v1) ||
-                    weard_function(v2, v3) || weard_function(v3, v2) ||
-                    weard_function(v2, v4) || weard_function(v4, v2) ||
-                    weard_function(v3, v4) || weard_function(v4, v3)) {
-                  found = false;
-                }
-              }
-            }
-            matrix.reset_switch();
-            if (good && found) {
-              std::cout << "Very good" << v1 << " " << v2 << " " << v3 << " "
-                        << v4 << std::endl;
+            // ms << "Selected:" << v1 << " " << v2 << " " << v3 << " " << v4 <<
+            // "\n";
+            if (verifyPropertyGadgetHelper1(v1, v2, v3, v4)) {
               return true;
             }
+            matrix.reset_switch();
           }
         }
       }
+    }
+    return false;
+  }
+
+  bool verifyPropertyGadgetHelper1(int v1, int v2, int v3, int v4) {
+    bool found = false;
+    std::set<unsigned> s;
+    // std::cout << "--\n";
+    while (!matrix.next_switch(v1)) {
+      if (tec_to_UC4()) {
+        s.insert(8 * (matrix.switchCol[v1] ? 1 : 0) +
+                 4 * (matrix.switchCol[v2] ? 1 : 0) +
+                 2 * (matrix.switchCol[v3] ? 1 : 0) +
+                 (matrix.switchCol[v4] ? 1 : 0));
+        /*std::cout << 8 * (matrix.switchCol[v1] ? 1 : 0) +
+                         4 * (matrix.switchCol[v2] ? 1 : 0) +
+                         2 * (matrix.switchCol[v3] ? 1 : 0) +
+                         (matrix.switchCol[v4] ? 1 : 0)
+                  << '\n';*/
+        if (s.size() > 1) {
+          return false;
+        }
+        // ms << *this;
+        BipGraph B(n);
+        id(B, v1, v2, v3, v4);
+        if (!B.tec_to_UC4()) {
+          return false;
+        } else {
+          found = true;
+        }
+        if (weard_function(v1, v2) || weard_function(v2, v1) ||
+            weard_function(v1, v3) || weard_function(v3, v1) ||
+            weard_function(v1, v4) || weard_function(v4, v1) ||
+            weard_function(v2, v3) || weard_function(v3, v2) ||
+            weard_function(v2, v4) || weard_function(v4, v2) ||
+            weard_function(v3, v4) || weard_function(v4, v3)) {
+          return false;
+        }
+      }
+    }
+    matrix.reset_switch();
+    if (s.size() == 1 && found) {
+      ms << "Very good" << (int)v1 << " " << (int)v2 << " " << (int)v3 << " "
+         << (int)v4 << '\n';
+      return true;
     }
     return false;
   }
@@ -490,8 +547,8 @@ struct BipGraph {
     uchar col2 = UC4.b % n;
     uchar ligne1 = UC4.a / n;
     uchar ligne2 = UC4.b / n;
-    // std::cout << col1 << " " << col2 << " " << ligne1 << " " << ligne2 << " "
-    //          << UC4.a << " " << UC4.b << std::endl;
+    // ms << col1 << " " << col2 << " " << ligne1 << " " << ligne2 << " "
+    //          << UC4.a << " " << UC4.b << '\n';
     bool eq1 = true;
     bool op1 = true;
     for (uchar i = 0; i < n; i++) {
@@ -590,23 +647,23 @@ struct BipGraph {
       }
       current_col++;
     }
-    // std::cout << G2 << "\n";
-    // std::cout << "bah" << std::endl;
+    // ms << G2 << "\n";
+    // ms << "bah" << '\n';
 
-    // std::cout << eq1 << op1 << eq2 << op2 << "\n";
+    // ms << eq1 << op1 << eq2 << op2 << "\n";
     return true;
   }
 
   bool tentative_poly_test_helper(BipGraph G) {
-    // std::cout << "booo" << std::endl;
+    // ms << "booo" << '\n';
     DoubleUC4 UC4(n * n, n * n);
     BipGraph G2(n);
     // G2.matrix.mat = std::vector<int>(n * n, -1);
     if (has_double_uc4(G, UC4)) {
-      // std::cout << "booo" << std::endl;
+      // ms << "booo" << '\n';
       if (uc4_fold(G, G2, UC4)) {
-        // std::cout << "booo2" << std::endl;
-        // std::cout << G2 << "\n";
+        // ms << "booo2" << '\n';
+        // ms << G2 << "\n";
         return tentative_poly_test_helper(G2);
       } else {
         return false;
