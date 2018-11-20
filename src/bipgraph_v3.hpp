@@ -2,29 +2,25 @@
 #define GRAPH_HPP
 
 #include <algorithm>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/boyer_myrvold_planar_test.hpp>
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/boyer_myrvold_planar_test.hpp>
 
 // Warning code dégueux extrait d'une api écrit en 50 av JC.
 
-using BoostGraph = boost::adjacency_list<boost::vecS,
-                         boost::vecS,
-                         boost::undirectedS,
-                         boost::property<boost::vertex_index_t, int>
-                         >;
+using BoostGraph =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
+                          boost::property<boost::vertex_index_t, int>>;
 
 // Fin du code dégueux
 
 // Warning code dégueux NON COMMENTER écrit par moi
 // Âmes sensibles s'abstenir
 
-
 #define DEGMAX 3
 using uchar = unsigned char;
-
 
 struct DoubleUC4 {
   uchar a, b;
@@ -43,7 +39,7 @@ struct Matrix {
   std::vector<uchar> compLine;
   std::vector<bool> switchCol;
   std::vector<bool> switchLine;
-	uchar nb_col_leq_2;
+  uchar nb_col_leq_2;
 
   Matrix(const uchar n)
       : size(n), mat(std::vector<uchar>(n * n, 0)),
@@ -53,12 +49,13 @@ struct Matrix {
         compCol(std::vector<uchar>(n, n * n)),
         compLine(std::vector<uchar>(n, n * n)),
         switchCol(std::vector<bool>(n, false)),
-        switchLine(std::vector<bool>(n, false)),
-				nb_col_leq_2(size) {}
+        switchLine(std::vector<bool>(n, false)), nb_col_leq_2(size) {}
 
-  uchar &at(const uchar a,const  uchar b) { return mat[a * size + b]; }
-  uchar at(const uchar a,const  uchar b) const{ return mat[a * size + b]; }
-  uchar at_val(const uchar a,const  uchar b) const { return value(a * size + b); }
+  uchar &at(const uchar a, const uchar b) { return mat[a * size + b]; }
+  uchar at(const uchar a, const uchar b) const { return mat[a * size + b]; }
+  uchar at_val(const uchar a, const uchar b) const {
+    return value(a * size + b);
+  }
   uchar value(const uchar i) const {
     if (switchCol[i % size] == switchLine[i / size]) {
       return mat[i];
@@ -87,7 +84,7 @@ struct Matrix {
   uchar get_compCol(const uchar i) const { return compCol[i % size]; }
   uchar get_compLine(const uchar i) const { return compLine[i / size]; }
 
-  bool is_strong(const uchar i) const{
+  bool is_strong(const uchar i) const {
     return (get_strongCol(i) == i) || (get_strongLine(i) == i);
   }
 
@@ -98,9 +95,10 @@ struct Matrix {
     }
   }
 
-  bool next_switch(const uchar c1 = -1,const uchar c2= -1, const uchar c3 = -1, const uchar c4 = -1) {
+  bool next_switch(const uchar c1 = -1, const uchar c2 = -1,
+                   const uchar c3 = -1, const uchar c4 = -1) {
     for (uchar i = 0; i < size; i++) {
-      if (i == c1 || i == c2 || i == c3 || i == c4){
+      if (i == c1 || i == c2 || i == c3 || i == c4) {
         continue;
       }
       switchCol[i] = !switchCol[i];
@@ -132,9 +130,9 @@ struct Matrix {
     mat[i]++;
     if (mat[i] > 2) {
       mat[i] = 0;
-			if (degreCol(i) == 3){
-				nb_col_leq_2++;
-			}
+      if (degreCol(i) == 3) {
+        nb_col_leq_2++;
+      }
       degreCol(i)--;
       degreLine(i)--;
       if (get_strongCol(i) == i) {
@@ -153,9 +151,9 @@ struct Matrix {
     } else if (mat[i] == 1) {
       degreCol(i)++;
       degreLine(i)++;
-			if (degreCol(i) == 3){
-				nb_col_leq_2--;
-			}
+      if (degreCol(i) == 3) {
+        nb_col_leq_2--;
+      }
       if (get_strongCol(i) > i) {
         get_strongCol(i) = i;
       }
@@ -217,10 +215,10 @@ struct Matrix {
   }
 
   void zero(const uchar i) {
-		if ((mat[i] % 3) != 0) {
-			if (degreCol(i) == 3){
-				nb_col_leq_2++;
-			}
+    if ((mat[i] % 3) != 0) {
+      if (degreCol(i) == 3) {
+        nb_col_leq_2++;
+      }
       degreCol(i)--;
       degreLine(i)--;
     }
@@ -240,23 +238,24 @@ struct Matrix {
     mat[i] = 0;
   }
 
-	void populate_boost_graph(BoostGraph & g){
-		for (uchar i=0;i<size;i++){
-			for (uchar j=0;j<size;j++){
-				if (at(i,j)){
-					boost::add_edge(i,size+j,g);
-				}
-			}
-		}
-	}
+  void populate_boost_graph(BoostGraph &g) {
+    for (uchar i = 0; i < size; i++) {
+      for (uchar j = 0; j < size; j++) {
+        if (at(i, j)) {
+          boost::add_edge(i, size + j, g);
+        }
+      }
+    }
+  }
 
-	bool as_at_least_4_deg_2(){
-		uchar nb = 0;
-		for (uchar i =0; i<size;i++){
-			if (degCol[i] == 2) nb++;
-		}
-		return nb >= 4;
-	}
+  bool as_at_least_4_deg_2() {
+    uchar nb = 0;
+    for (uchar i = 0; i < size; i++) {
+      if (degCol[i] == 2)
+        nb++;
+    }
+    return nb >= 4;
+  }
 };
 
 struct BipGraph {
@@ -272,15 +271,23 @@ struct BipGraph {
   }
   friend std::ostream &operator<<(std::ostream &os, BipGraph &G);
 
-	bool is_planar(){
-		BoostGraph g(2*n);
-		matrix.populate_boost_graph(g);
-	  return boyer_myrvold_planarity_test(g);
-	}
+  bool is_planar() {
+    BoostGraph g(2 * n);
+    matrix.populate_boost_graph(g);
+    return boyer_myrvold_planarity_test(g);
+  }
 
-	bool as_at_least_4_deg_2(){
-		return matrix.as_at_least_4_deg_2();
-	}
+  bool as_at_least_4_deg_2() { return matrix.as_at_least_4_deg_2(); }
+
+  bool has_deg_1() {
+    for (int i = 0; i < n; i++) {
+      if (matrix.degCol[i] == 1 || matrix.degLine[i] == 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void next(const int i) {
     // Si on atteint un indice négatif, on a dépacé le bit de poinds le plus
     // fort
@@ -291,9 +298,9 @@ struct BipGraph {
 
     if (matrix.incr(i)) { // Si on a une retenue, on avance
       next(i - 1);
-    } else if (matrix.degreCol(i) > DEGMAX ||
-               matrix.degreLine(i) >
-                   DEGMAX || matrix.nb_col_leq_2 < 4) { // Si le degre est trop grand on propage une retenue
+    } else if (matrix.degreCol(i) > DEGMAX || matrix.degreLine(i) > DEGMAX ||
+               matrix.nb_col_leq_2 <
+                   4) { // Si le degre est trop grand on propage une retenue
       matrix.zero(i);
       next(i - 1);
     } else if (matrix.is_strong(i) && matrix[i] == 1) {
@@ -334,67 +341,68 @@ struct BipGraph {
     return false;
   }
 
-  bool verifyPropertyGadget(){
-      for (uchar v1=0; v1 <n; v1++){
-        if (matrix.degCol[v1] != 2){
+  bool verifyPropertyGadget() {
+    for (uchar v1 = 0; v1 < n; v1++) {
+      if (matrix.degCol[v1] != 2) {
+        continue;
+      }
+      for (uchar v2 = v1 + 1; v2 < n; v2++) {
+        if (matrix.degCol[v2] != 2) {
           continue;
         }
-        for (uchar v2=v1+1; v2 <n; v2++){
-          if (matrix.degCol[v2] != 2){
+        for (uchar v3 = v2 + 1; v3 < n; v3++) {
+          if (matrix.degCol[v3] != 2) {
             continue;
           }
-          for (uchar v3=v2+1; v3 <n; v3++){
-            if (matrix.degCol[v3] != 2){
+          for (uchar v4 = v3 + 1; v4 < n; v4++) {
+            if (matrix.degCol[v4] != 2) {
               continue;
             }
-            for (uchar v4=v3+1; v4 <n; v4++){
-              if (matrix.degCol[v4] != 2){
-                continue;
-              }
-              //std::cout << "Selected:" << v1 << " " << v2 << " " << v3 << " " << v4 << "\n";
-              bool found = true;
-              bool good = false;
-              while (!matrix.next_switch(v1,v2,v3,v4) && found) {
-                if (tec_to_UC4()) {
-                  good = true;
-                  // std::cout << *this;
-                  BipGraph B(n);
-                  id(B,v1,v2,v3,v4);
-                  if (!B.tec_to_UC4()){
-                    found = false;
-                    continue;
-                  }
-                  if (weard_function(v1,v2) || weard_function(v2,v1)
-                     || weard_function(v1,v3) || weard_function(v3,v1)
-                     || weard_function(v1,v4) || weard_function(v4,v1)
-                     || weard_function(v2,v3) || weard_function(v3,v2)
-                     || weard_function(v2,v4) || weard_function(v4,v2)
-                     || weard_function(v3,v4) || weard_function(v4,v3)
-                   ){
-                     found = false;
-                   }
+            // std::cout << "Selected:" << v1 << " " << v2 << " " << v3 << " "
+            // << v4 << "\n";
+            bool found = true;
+            bool good = false;
+            while (!matrix.next_switch(v1, v2, v3, v4) && found) {
+              if (tec_to_UC4()) {
+                good = true;
+                // std::cout << *this;
+                BipGraph B(n);
+                id(B, v1, v2, v3, v4);
+                if (!B.tec_to_UC4()) {
+                  found = false;
+                  continue;
+                }
+                if (weard_function(v1, v2) || weard_function(v2, v1) ||
+                    weard_function(v1, v3) || weard_function(v3, v1) ||
+                    weard_function(v1, v4) || weard_function(v4, v1) ||
+                    weard_function(v2, v3) || weard_function(v3, v2) ||
+                    weard_function(v2, v4) || weard_function(v4, v2) ||
+                    weard_function(v3, v4) || weard_function(v4, v3)) {
+                  found = false;
                 }
               }
-              matrix.reset_switch();
-              if (good && found){
-std::cout << "Very good" << v1 << " " << v2 << " " << v3 << " " << v4 << std::endl;
-                return true;
-              }
+            }
+            matrix.reset_switch();
+            if (good && found) {
+              std::cout << "Very good" << v1 << " " << v2 << " " << v3 << " "
+                        << v4 << std::endl;
+              return true;
             }
           }
         }
       }
-      return false;
+    }
+    return false;
   }
 
-  bool weard_function(uchar c1,uchar c2) const {
+  bool weard_function(uchar c1, uchar c2) const {
     // Create a fake +- between two columns (- is located toward c2)
     // Then test if -> UC_4
-    for (uchar i=0; i< n*n-1;i++){
-      if (matrix.value(i) == 2 && i%n != c2){
-        if (i%n == c1){
+    for (uchar i = 0; i < n * n - 1; i++) {
+      if (matrix.value(i) == 2 && i % n != c2) {
+        if (i % n == c1) {
           return false;
-        } else{
+        } else {
           if (matrix.value((i / n) * n + c2) == 1) {
             return false;
           }
@@ -404,21 +412,21 @@ std::cout << "Very good" << v1 << " " << v2 << " " << v3 << " " << v4 << std::en
     return true;
   }
 
-  bool id(BipGraph &B,uchar c1, uchar c2, uchar c3, uchar c4){
+  bool id(BipGraph &B, uchar c1, uchar c2, uchar c3, uchar c4) {
     uchar id_col = 1;
-    for (uchar i=0; i<n;i++){
-      if (i == c1 || i == c2 || i == c3 || i == c4){
-        for (uchar j=0; j<n;j++){
-          if (B.matrix.at(0,j) == 0){
-            B.matrix.at(0,j) = matrix.at_val(i,j);
-          }
-          else if (B.matrix.at(0,j) != matrix.at_val(i,j) && matrix.at_val(i,j) != 0){
+    for (uchar i = 0; i < n; i++) {
+      if (i == c1 || i == c2 || i == c3 || i == c4) {
+        for (uchar j = 0; j < n; j++) {
+          if (B.matrix.at(0, j) == 0) {
+            B.matrix.at(0, j) = matrix.at_val(i, j);
+          } else if (B.matrix.at(0, j) != matrix.at_val(i, j) &&
+                     matrix.at_val(i, j) != 0) {
             return false;
           }
         }
-      } else{
-        for (uchar j=0; j<n;j++){
-            B.matrix.at(id_col,j) = matrix.at_val(i,j);
+      } else {
+        for (uchar j = 0; j < n; j++) {
+          B.matrix.at(id_col, j) = matrix.at_val(i, j);
         }
         id_col++;
       }
@@ -614,8 +622,8 @@ std::ostream &operator<<(std::ostream &os, BipGraph &G) {
     for (int j = 0; j < G.n; j++) {
       os << (int)G.matrix.at_val(i, j) << " ";
     }
-    os << " | " << (int)G.matrix.degLine[i] << " | " << (int)G.matrix.strongLine[i]
-       << " | " << (int)G.matrix.compLine[i];
+    os << " | " << (int)G.matrix.degLine[i] << " | "
+       << (int)G.matrix.strongLine[i] << " | " << (int)G.matrix.compLine[i];
     os << "\n";
   }
   for (int j = 0; j < G.n; j++) {

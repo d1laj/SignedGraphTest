@@ -4,6 +4,8 @@
 #include <mutex>
 #include <thread>
 
+#define PROFILE 1
+
 namespace Color {
 enum Code {
   FG_RED = 31,
@@ -26,7 +28,7 @@ public:
 };
 } // namespace Color
 
-int n= 9;
+int n= 8;
 #define NB_FRAG 500000
 bool stop = false;
 std::mutex talk;
@@ -88,12 +90,15 @@ void th_test(unsigned long long total, int id){
   }
 }
 
-int nb_threads = 8;
+int nb_threads = 1;
 void test(unsigned long long total, int start, int end){
   for (int i= start; i< end;i++){
     fragments.push(i);
   }
 
+#if PROFILE
+  th_test(total,0);
+#else
   std::vector<std::thread> thread_list;
   for (int i=0; i<nb_threads;i++){
     thread_list.push_back(std::thread(th_test,total, i));
@@ -101,6 +106,7 @@ void test(unsigned long long total, int start, int end){
   for (int i=0; i<nb_threads;i++){
     thread_list[i].join();
   }
+#endif
 }
 
 
